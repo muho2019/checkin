@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Company } from 'src/modules/companies/entities/company.entity';
 import { AttendanceRecord } from 'src/modules/attendance/entities/attendance.entity';
+import { Exclude } from 'class-transformer';
 
 export enum Role {
   MANAGER = 'MANAGER',
@@ -21,6 +22,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
   password: string;
 
