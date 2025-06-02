@@ -31,6 +31,18 @@ export class CompaniesService {
     return company;
   }
 
+  async findById(id: string): Promise<Company> {
+    const company = await this.companyRepo.findOne({
+      where: { id },
+    });
+
+    if (!company) {
+      throw new NotFoundException('회사를 찾을 수 없습니다.');
+    }
+
+    return company;
+  }
+
   async create(dto: CreateCompanyDto): Promise<Company> {
     const exists = await this.companyRepo.findOne({
       where: { name: dto.name },

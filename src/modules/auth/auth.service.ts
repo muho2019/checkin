@@ -10,12 +10,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { CompaniesService } from '../companies/companies.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    private readonly companiesService: CompaniesService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -28,11 +30,14 @@ export class AuthService {
       throw new ConflictException('이미 사용 중인 이메일입니다.');
     }
 
+    const company = await this.companiesService.findById(dto.companyId);
+
     const hashed = await bcrypt.hash(dto.password, 10);
 
     const newUser = this.userRepo.create({
       ...dto,
       password: hashed,
+      company,
     });
 
     const saved = await this.userRepo.save(newUser);
