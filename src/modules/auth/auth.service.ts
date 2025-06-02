@@ -21,7 +21,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(dto: CreateUserDto): Promise<Omit<User, 'password'>> {
+  async signup(dto: CreateUserDto): Promise<User> {
     const existing = await this.userRepo.findOne({
       where: { email: dto.email },
     });
@@ -40,10 +40,7 @@ export class AuthService {
       company,
     });
 
-    const saved = await this.userRepo.save(newUser);
-
-    const { password, ...result } = saved;
-    return result;
+    return await this.userRepo.save(newUser);
   }
 
   async validateUser(email: string, password: string): Promise<User> {
