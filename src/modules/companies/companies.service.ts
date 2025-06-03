@@ -19,16 +19,10 @@ export class CompaniesService {
     return this.companyRepo.find();
   }
 
-  async findOne(name: string): Promise<Company> {
-    const company = await this.companyRepo.findOne({
+  async findOne(name: string): Promise<Company | null> {
+    return await this.companyRepo.findOne({
       where: { name },
     });
-
-    if (!company) {
-      throw new NotFoundException('회사를 찾을 수 없습니다.');
-    }
-
-    return company;
   }
 
   async findById(id: string): Promise<Company> {

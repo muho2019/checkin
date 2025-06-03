@@ -1,9 +1,21 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "../",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1",
+    "^@modules/(.*)$": "<rootDir>/src/modules/$1",
+    "^@auth/(.*)$": "<rootDir>/src/modules/auth/$1",
+    "^@users/(.*)$": "<rootDir>/src/modules/users/$1",
+    "^@companies/(.*)$": "<rootDir>/src/modules/companies/$1",
+    "^@attendance/(.*)$": "<rootDir>/src/modules/attendance/$1",
+    "^@common/(.*)$": "<rootDir>/src/common/$1",
+    "^@decorators/(.*)$": "<rootDir>/src/common/decorators/$1",
+    "^@interfaces/(.*)$": "<rootDir>/src/common/interfaces/$1"
+  },
+  "verbose": true
 }

@@ -5,8 +5,8 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { Company } from 'src/modules/companies/entities/company.entity';
-import { AttendanceRecord } from 'src/modules/attendance/entities/attendance.entity';
+import { Company } from '@companies/entities/company.entity';
+import { AttendanceRecord } from '@attendance/entities/attendance.entity';
 import { Exclude } from 'class-transformer';
 
 export enum Role {

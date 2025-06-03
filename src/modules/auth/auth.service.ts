@@ -4,14 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
+import { User } from '@users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { CompaniesService } from '../companies/companies.service';
+import { CompaniesService } from '@companies/companies.service';
+import { CreateCompanyDto } from '@companies/dto/create-company.dto';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +31,14 @@ export class AuthService {
       throw new ConflictException('이미 사용 중인 이메일입니다.');
     }
 
-    const company = await this.companiesService.findById(dto.companyId);
+    let company = await this.companiesService.findOne(dto.companyName);
+
+    if (!company) {
+      const createCompanyDto: CreateCompanyDto = {
+        name: dto.companyName,
+      };
+      company = await this.companiesService.create(createCompanyDto);
+    }
 
     const hashed = await bcrypt.hash(dto.password, 10);
 

@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AttendanceService } from './attendance.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUser } from '@decorators/current-user.decorator';
 import { StatsDto } from './dto/stats.dto';
 import { StatsResponseDto } from './dto/stats-response.dto';
-import { AuthUser } from '../../common/interfaces/auth-user.interface';
+import { AuthUser } from '@interfaces/auth-user.interface';
 
 @Controller('attendance')
 @UseGuards(AuthGuard('jwt'))

@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './modules/auth/auth.module';
-import { CompaniesModule } from './modules/companies/companies.module';
-import { UsersModule } from './modules/users/users.module';
-import { AttendanceModule } from './modules/attendance/attendance.module';
+import { AuthModule } from '@auth/auth.module';
+import { CompaniesModule } from '@companies/companies.module';
+import { UsersModule } from '@users/users.module';
+import { AttendanceModule } from '@attendance/attendance.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './modules/users/entities/user.entity';
-import { Company } from './modules/companies/entities/company.entity';
-import { AttendanceRecord } from './modules/attendance/entities/attendance.entity';
+import { User } from '@users/entities/user.entity';
+import { Company } from '@companies/entities/company.entity';
+import { AttendanceRecord } from '@attendance/entities/attendance.entity';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({

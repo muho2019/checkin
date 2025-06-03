@@ -2,14 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceRecord } from './entities/attendance.entity';
 import { Between, FindOptionsWhere, Repository } from 'typeorm';
-import { Role, User } from '../users/entities/user.entity';
+import { Role, User } from '@users/entities/user.entity';
 import { StatsDto, StatsType } from './dto/stats.dto';
 import {
   DateGroupedStatDto,
   StatsResponseDto,
   UserStatDto,
 } from './dto/stats-response.dto';
-import { AuthUser } from '../../common/interfaces/auth-user.interface';
+import { AuthUser } from '@interfaces/auth-user.interface';
 
 @Injectable()
 export class AttendanceService {
