@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from 'src/modules/users/entities/user.entity';
+import { Transform } from 'class-transformer';
 
 @Entity()
 export class AttendanceRecord {
@@ -9,8 +10,9 @@ export class AttendanceRecord {
   @ManyToOne(() => User, (user) => user.records, { onDelete: 'CASCADE' })
   user: User;
 
+  @Transform(({ value }): string => (value as Date).toISOString().split('T')[0])
   @Column({ type: 'date' })
-  date: string; // YYYY-MM-DD 형식
+  date: Date; // YYYY-MM-DD 형식
 
   @Column({ type: 'timestamp', nullable: true })
   checkIn: Date;

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceRecord } from './entities/attendance.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, FindOptionsWhere, Repository } from 'typeorm';
 import { Role, User } from '../users/entities/user.entity';
 import { StatsDto, StatsType } from './dto/stats.dto';
 import {
@@ -19,8 +19,10 @@ export class AttendanceService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
-  private getTodayDate(): string {
-    return new Date().toISOString().split('T')[0];
+  private getTodayDate(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간 초기화
+    return today;
   }
 
   async checkIn(userId: string): Promise<AttendanceRecord> {
@@ -81,15 +83,13 @@ export class AttendanceService {
   async getStats(user: AuthUser, dto: StatsDto): Promise<StatsResponseDto> {
     const { type, from, to } = dto;
 
-    const whereCondition: any = {
+    const whereCondition = {
       date: Between(new Date(from), new Date(to)),
-    };
-
-    if (user.role === Role.EMPLOYEE) {
-      whereCondition.user = { id: user.sub };
-    } else if (user.role === Role.MANAGER) {
-      whereCondition.user = { company: { id: user.companyId } };
-    }
+      user:
+        user.role === Role.EMPLOYEE
+          ? { id: user.sub }
+          : { company: { id: user.companyId } },
+    } satisfies FindOptionsWhere<AttendanceRecord>;
 
     const records = await this.attendanceRepository.find({
       where: whereCondition,
@@ -112,7 +112,7 @@ export class AttendanceService {
         continue;
       }
 
-      const key = this.getGroupKey(record.date, type);
+      const key = this.getGroupKey(this.convertToDate(record.date), type);
       const hours =
         (record.checkOut.getTime() - record.checkIn.getTime()) / 1000 / 60 / 60;
 
@@ -138,22 +138,28 @@ export class AttendanceService {
     }));
   }
 
-  private getGroupKey(date: string, type: StatsType): string {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+  private getGroupKey(date: Date, type: StatsType): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
 
     switch (type) {
       case StatsType.DAILY:
         return `${year}-${month}-${day}`;
       case StatsType.WEEKLY: {
-        const firstDay = new Date(d);
-        firstDay.setDate(d.getDate() - d.getDay());
+        const firstDay = new Date(date);
+        firstDay.setDate(date.getDate() - date.getDay());
         return firstDay.toISOString().split('T')[0];
       }
       case StatsType.MONTHLY:
         return `${year}-${month}`;
     }
+  }
+
+  private convertToDate(date: string | Date): Date {
+    if (typeof date === 'string') {
+      return new Date(date);
+    }
+    return date;
   }
 }
