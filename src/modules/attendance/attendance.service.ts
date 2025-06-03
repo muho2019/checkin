@@ -9,6 +9,7 @@ import {
   StatsResponseDto,
   UserStatDto,
 } from './dto/stats-response.dto';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
 
 @Injectable()
 export class AttendanceService {
@@ -77,7 +78,7 @@ export class AttendanceService {
     return await this.attendanceRepository.save(record);
   }
 
-  async getStats(user: any, dto: StatsDto): Promise<StatsResponseDto> {
+  async getStats(user: AuthUser, dto: StatsDto): Promise<StatsResponseDto> {
     const { type, from, to } = dto;
 
     const whereCondition: any = {
