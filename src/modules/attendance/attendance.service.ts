@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceRecord } from './entities/attendance.entity';
-import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { Between, Repository } from 'typeorm';
+import { Role, User } from '../users/entities/user.entity';
+import { StatsDto, StatsType } from './dto/stats.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -69,5 +70,80 @@ export class AttendanceService {
     record.checkOut = new Date();
 
     return await this.attendanceRepository.save(record);
+  }
+
+  async getStats(user: any, dto: StatsDto) {
+    const { type, from, to } = dto;
+
+    const whereCondition: any = {
+      date: Between(new Date(from), new Date(to)),
+    };
+
+    if (user.role === 'EMPLOYEE') {
+      whereCondition.user = { id: user.sub };
+    } else if (user.role === 'MANAGER') {
+      whereCondition.user = { company: { id: user.companyId } };
+    }
+
+    const records = await this.attendanceRepository.find({
+      where: whereCondition,
+      relations: ['user'],
+    });
+
+    const grouped = this.groupByPeriod(records, type);
+
+    return grouped;
+  }
+
+  private groupByPeriod(
+    records: AttendanceRecord[],
+    type: StatsType,
+  ): Record<string, { userId: string; name; string; totalHours: number }[]> {
+    const result: Record<string, any[]> = {};
+
+    for (const record of records) {
+      if (!record.checkIn || !record.checkOut) {
+        continue;
+      }
+
+      const key = this.getGroupKey(record.date, type);
+      const hours =
+        (record.checkOut.getTime() - record.checkIn.getTime()) / 1000 / 60 / 60;
+
+      if (!result[key]) {
+        result[key] = [];
+      }
+
+      const userData = result[key].find((u) => u.userId === record.user.id);
+      if (userData) {
+        userData.totalHours += hours;
+      } else {
+        result[key].push({
+          userId: record.user.id,
+          name: record.user.name,
+          totalHours: hours,
+        });
+      }
+    }
+    return result;
+  }
+
+  private getGroupKey(date: string, type: StatsType): string {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    switch (type) {
+      case StatsType.DAILY:
+        return `${year}-${month}-${day}`;
+      case StatsType.WEEKLY: {
+        const firstDay = new Date(d);
+        firstDay.setDate(d.getDate() - d.getDay());
+        return firstDay.toISOString().split('T')[0];
+      }
+      case StatsType.MONTHLY:
+        return `${year}-${month}`;
+    }
   }
 }
