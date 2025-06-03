@@ -4,17 +4,20 @@ import { v4 as uuid } from 'uuid';
 import { DataSource } from 'typeorm';
 
 export class E2ETestHelper {
-  static async createCompanyAndUser(app: INestApplication) {
+  static async createCompanyAndUser(
+    app: INestApplication,
+    role: 'EMPLOYEE' | 'MANAGER' = 'EMPLOYEE',
+    companyName: string = `테스트 회사-${uuid().slice(0, 8)}`,
+  ) {
     const email = `user-${uuid()}@test.com`;
     const password = 'test1234';
-    const companyName = `테스트 회사-${uuid().slice(0, 8)}`;
 
     // 회원가입
     await request(app.getHttpServer()).post('/auth/signup').send({
       email,
       password,
       name: 'E2E Tester',
-      role: 'EMPLOYEE',
+      role,
       companyName,
     });
 
