@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { AttendanceService } from './attendance.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { StatsDto } from './dto/stats.dto';
+import { StatsResponseDto } from './dto/stats-response.dto';
 
 @Controller('attendance')
 @UseGuards(AuthGuard('jwt'))
@@ -20,7 +21,10 @@ export class AttendanceController {
   }
 
   @Get('stats')
-  async getStats(@Query() dto: StatsDto, @CurrentUser() user: any) {
+  async getStats(
+    @Query() dto: StatsDto,
+    @CurrentUser() user: any,
+  ): Promise<StatsResponseDto> {
     return this.attendanceService.getStats(user, dto);
   }
 }

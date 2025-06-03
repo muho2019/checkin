@@ -4,6 +4,11 @@ import { AttendanceRecord } from './entities/attendance.entity';
 import { Between, Repository } from 'typeorm';
 import { Role, User } from '../users/entities/user.entity';
 import { StatsDto, StatsType } from './dto/stats.dto';
+import {
+  DateGroupedStatDto,
+  StatsResponseDto,
+  UserStatDto,
+} from './dto/stats-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -72,16 +77,16 @@ export class AttendanceService {
     return await this.attendanceRepository.save(record);
   }
 
-  async getStats(user: any, dto: StatsDto) {
+  async getStats(user: any, dto: StatsDto): Promise<StatsResponseDto> {
     const { type, from, to } = dto;
 
     const whereCondition: any = {
       date: Between(new Date(from), new Date(to)),
     };
 
-    if (user.role === 'EMPLOYEE') {
+    if (user.role === Role.EMPLOYEE) {
       whereCondition.user = { id: user.sub };
-    } else if (user.role === 'MANAGER') {
+    } else if (user.role === Role.MANAGER) {
       whereCondition.user = { company: { id: user.companyId } };
     }
 
@@ -92,14 +97,14 @@ export class AttendanceService {
 
     const grouped = this.groupByPeriod(records, type);
 
-    return grouped;
+    return { data: grouped };
   }
 
   private groupByPeriod(
     records: AttendanceRecord[],
     type: StatsType,
-  ): Record<string, { userId: string; name; string; totalHours: number }[]> {
-    const result: Record<string, any[]> = {};
+  ): DateGroupedStatDto[] {
+    const result: Record<string, UserStatDto[]> = {};
 
     for (const record of records) {
       if (!record.checkIn || !record.checkOut) {
@@ -125,7 +130,11 @@ export class AttendanceService {
         });
       }
     }
-    return result;
+
+    return Object.entries(result).map(([date, entries]) => ({
+      date,
+      entries,
+    }));
   }
 
   private getGroupKey(date: string, type: StatsType): string {
