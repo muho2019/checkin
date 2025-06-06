@@ -76,7 +76,7 @@ export class AttendanceService {
     }
 
     record.checkOut = new Date();
-
+    console.log('record is', record);
     return await this.attendanceRepository.save(record);
   }
 

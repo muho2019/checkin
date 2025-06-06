@@ -30,7 +30,7 @@
       // 공통 유틸리티 / 설정
       "@common/*": ["src/common/*"],
       "@decorators/*": ["src/common/decorators/*"],
-      "@interfaces/*": ["src/common/interfaces/*"],
+      "@interfaces/*": ["src/common/interfaces/*"]
     }
   }
 }

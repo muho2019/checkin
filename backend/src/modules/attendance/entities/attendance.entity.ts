@@ -10,7 +10,6 @@ export class AttendanceRecord {
   @ManyToOne(() => User, (user) => user.records, { onDelete: 'CASCADE' })
   user: User;
 
-  @Transform(({ value }): string => (value as Date).toISOString().split('T')[0])
   @Column({ type: 'date' })
   date: Date; // YYYY-MM-DD 형식
 
