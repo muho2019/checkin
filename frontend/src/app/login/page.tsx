@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AuthLayout } from '@/components/auth-layout';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -96,11 +97,7 @@ export default function LoginPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
+                <Checkbox id="remember" />
                 <Label htmlFor="remember" className="text-sm">
                   로그인 상태 유지
                 </Label>

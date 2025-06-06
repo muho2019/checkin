@@ -18,6 +18,7 @@ import {
 import { AuthLayout } from '@/components/auth-layout';
 import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -201,12 +202,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <input
-                id="terms"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                required
-              />
+              <Checkbox id="terms" required />
               <Label htmlFor="terms" className="text-sm">
                 <Link href="/terms" className="text-primary hover:underline">
                   이용약관
