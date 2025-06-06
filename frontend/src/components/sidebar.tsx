@@ -55,7 +55,7 @@ export function Sidebar() {
     <div
       className={cn(
         'relative flex flex-col border-r bg-background transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64',
+        collapsed ? 'w-16' : 'w-72',
       )}
     >
       <div className="flex h-16 items-center justify-between border-b px-4">
