@@ -3,13 +3,14 @@
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
 
 interface User {
   id: string;
   email: string;
   name: string;
-  company: string;
   role: 'EMPLOYEE' | 'MANAGER';
+  companyId: string;
 }
 
 interface AuthContextType {
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: payload.id,
         email: payload.email,
         name: payload.name,
-        company: payload.company,
+        companyId: payload.companyId,
         role: payload.role,
       };
     } catch {
@@ -99,18 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post('/auth/login', { email, password });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '로그인에 실패했습니다.');
+      if (response.status !== 201) {
+        throw new Error(response.data.message || '로그인에 실패했습니다.');
       }
 
-      const { token: newToken, user: userData } = await response.json();
+      const { accessToken: newToken, user: userData } = response.data;
 
       localStorage.setItem('auth-token', newToken);
       setToken(newToken);
