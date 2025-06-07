@@ -59,7 +59,7 @@ export function Header() {
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user?.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user?.company}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user?.companyName}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

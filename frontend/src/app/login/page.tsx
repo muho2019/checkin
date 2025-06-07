@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AuthLayout } from '@/components/auth-layout';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -95,16 +95,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember" className="text-sm">
-                  로그인 상태 유지
-                </Label>
-              </div>
-              <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+            <div className="flex justify-end">
+              <Button
+                variant="link"
+                type="button"
+                onClick={() =>
+                  toast.info('해당 기능은 추후 제공 예정', {
+                    description: 'Coming soon!',
+                  })
+                }
+              >
                 비밀번호 찾기
-              </Link>
+              </Button>
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>

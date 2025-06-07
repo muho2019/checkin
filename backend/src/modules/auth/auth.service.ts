@@ -74,6 +74,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       companyId: user.company?.id,
+      companyName: user.company?.name,
     };
 
     return {
@@ -84,6 +85,7 @@ export class AuthService {
         name: user.name,
         role: user.role,
         companyId: user.company?.id,
+        companyName: user.company?.name,
       },
     };
   }

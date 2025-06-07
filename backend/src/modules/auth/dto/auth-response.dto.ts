@@ -8,5 +8,6 @@ export class AuthResponseDto {
     name: string;
     role: Role;
     companyId: string;
+    companyName: string;
   };
 }

@@ -4,6 +4,7 @@ import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -11,6 +12,7 @@ interface User {
   name: string;
   role: 'EMPLOYEE' | 'MANAGER';
   companyId: string;
+  companyName: string;
 }
 
 interface AuthContextType {
@@ -46,8 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: payload.id,
         email: payload.email,
         name: payload.name,
-        companyId: payload.companyId,
         role: payload.role,
+        companyId: payload.companyId,
+        companyName: payload.companyName,
       };
     } catch {
       return null;
@@ -114,7 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       router.push('/');
     } catch (error) {
-      throw error;
+      if (error.response && error.response.status === 401) {
+        toast.error(error.response.data.message);
+      }
     } finally {
       setIsLoading(false);
     }
