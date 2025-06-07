@@ -3,7 +3,7 @@
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, handleApiError } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface User {
@@ -105,10 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.post('/auth/login', { email, password });
 
-      if (response.status !== 201) {
-        throw new Error(response.data.message || '로그인에 실패했습니다.');
-      }
-
       const { accessToken: newToken, user: userData } = response.data;
 
       localStorage.setItem('auth-token', newToken);
@@ -117,9 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       router.push('/');
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        toast.error(error.response.data.message);
-      }
+      handleApiError(error, '로그인에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }

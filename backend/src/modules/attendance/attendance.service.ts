@@ -10,6 +10,7 @@ import {
   UserStatDto,
 } from './dto/stats-response.dto';
 import { AuthUser } from '@interfaces/auth-user.interface';
+import { AttendanceResponseDto } from '@attendance/dto/attendance-response.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -25,7 +26,7 @@ export class AttendanceService {
     return today;
   }
 
-  async checkIn(userId: string): Promise<AttendanceRecord> {
+  async checkIn(userId: string): Promise<AttendanceResponseDto> {
     const today = this.getTodayDate();
 
     const existing = await this.attendanceRepository.findOne({
@@ -56,10 +57,14 @@ export class AttendanceService {
       record.checkIn = new Date();
     }
 
-    return await this.attendanceRepository.save(record);
+    await this.attendanceRepository.save(record);
+
+    return {
+      checkIn: record.checkIn,
+    };
   }
 
-  async checkOut(userId: string): Promise<AttendanceRecord> {
+  async checkOut(userId: string): Promise<AttendanceResponseDto> {
     const today = this.getTodayDate();
 
     const record = await this.attendanceRepository.findOne({
@@ -76,8 +81,12 @@ export class AttendanceService {
     }
 
     record.checkOut = new Date();
-    console.log('record is', record);
-    return await this.attendanceRepository.save(record);
+
+    await this.attendanceRepository.save(record);
+
+    return {
+      checkOut: record.checkOut,
+    };
   }
 
   async getStats(user: AuthUser, dto: StatsDto): Promise<StatsResponseDto> {

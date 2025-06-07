@@ -8,6 +8,7 @@ import { User } from '@users/entities/user.entity';
 import { Company } from '@companies/entities/company.entity';
 import { AttendanceRecord } from '@attendance/entities/attendance.entity';
 import { ConfigModule } from '@nestjs/config';
+import { DashboardModule } from '@modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ConfigModule } from '@nestjs/config';
     CompaniesModule,
     UsersModule,
     AttendanceModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

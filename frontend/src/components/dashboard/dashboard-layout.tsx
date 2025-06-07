@@ -1,7 +1,7 @@
 import type React from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Footer } from '@/components/footer';
+import { Header } from '@/components/common/header';
+import { Sidebar } from '@/components/common/sidebar';
+import { Footer } from '@/components/common/footer';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

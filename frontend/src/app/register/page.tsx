@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/auth/auth-layout';
 import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { Checkbox } from '@/components/ui/checkbox';

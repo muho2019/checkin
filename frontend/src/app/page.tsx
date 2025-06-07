@@ -1,13 +1,128 @@
-import { DashboardLayout } from '@/components/dashboard-layout';
+'use client';
+
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, TrendingUp, Users } from 'lucide-react';
+import { Clock, Calendar, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/protected-route';
+import { api, handleApiError } from '@/lib/api';
+import { toast } from 'sonner';
+import { parseISO } from 'date-fns';
+import { useEffect, useState } from 'react';
+import { DashboardCard } from '@/components/dashboard/dashboard-card';
+import { TodayAttendanceState } from '@/types/today-attendance';
+
+export function toDateTimeString(date?: Date | string): string {
+  if (!date) return '-';
+
+  const parsed = typeof date === 'string' ? parseISO(date) : date;
+
+  return parsed.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function toTimeString(date?: Date | string, second: boolean = true) {
+  if (!date) return '-';
+
+  const parsed = typeof date === 'string' ? parseISO(date) : date;
+
+  const options: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(second && { second: '2-digit' }),
+  };
+  return parsed.toLocaleTimeString('ko-KR', options);
+}
 
 export default function Dashboard() {
-  const currentTime = new Date().toLocaleString('ko-KR');
-  const isCheckedIn = false; // 실제로는 API에서 가져와야 함
+  const [currentTime, setCurrentTime] = useState(toTimeString(new Date()));
+  const [todayAttendance, setTodayAttendance] = useState<TodayAttendanceState>({
+    isCheckedIn: false,
+    isCheckedOut: false,
+    checkInDate: undefined,
+    checkOutDate: undefined,
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(toTimeString(new Date()));
+    }, 1000);
+
+    return () => clearInterval(timer); // 컴포넌트 언마운트 시 타이머 정리
+  }, []);
+
+  let attendanceStatusBadge = (
+    <Badge variant="default" className="bg-amber-300">
+      출근 전
+    </Badge>
+  );
+  if (todayAttendance.isCheckedOut) {
+    attendanceStatusBadge = <Badge variant="outline">퇴근</Badge>;
+  } else if (todayAttendance.isCheckedIn) {
+    attendanceStatusBadge = (
+      <Badge variant="default" className="bg-green-500 text-white">
+        출근
+      </Badge>
+    );
+  }
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const res = await api.get('/dashboard/summary');
+        const { isCheckedIn, isCheckedOut, checkInDate, checkOutDate } =
+          res.data as TodayAttendanceState;
+
+        setTodayAttendance(() => ({
+          isCheckedIn,
+          isCheckedOut,
+          checkInDate,
+          checkOutDate,
+        }));
+      } catch (error) {
+        handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
+      }
+    }
+    fetchDashboardData();
+  }, []);
+
+  const checkIn = async () => {
+    try {
+      const res = await api.post('/attendance/check-in');
+      toast.success('출근 처리 되었습니다.', {
+        description: `출근 시간: ${toTimeString(res.data.checkIn, false)}`,
+      });
+      setTodayAttendance(prev => ({
+        ...prev,
+        isCheckedIn: true,
+        checkInDate: res.data.checkIn,
+      }));
+    } catch (error) {
+      handleApiError(error, '출근 기록 저장에 실패했습니다.');
+    }
+  };
+  const checkOut = async () => {
+    try {
+      const res = await api.post('/attendance/check-out');
+      toast.success('퇴근 처리 되었습니다.', {
+        description: `퇴근 시간: ${toTimeString(res.data.checkOut, false)}`,
+      });
+      setTodayAttendance(prev => ({
+        ...prev,
+        isCheckedOut: true,
+        checkOutDate: res.data.checkOut,
+      }));
+    } catch (error) {
+      handleApiError(error, '퇴근 기록 저장에 실패했습니다.');
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -18,85 +133,77 @@ export default function Dashboard() {
             <p className="text-muted-foreground">오늘의 근태 현황을 확인하세요</p>
           </div>
 
-          {/* 출퇴근 상태 카드 */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">출근 상태</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {isCheckedIn ? (
-                    <Badge variant="default" className="bg-green-500">
-                      출근
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">미출근</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{currentTime}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">이번 주 근무시간</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">32시간</div>
-                <p className="text-xs text-muted-foreground">목표: 40시간</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">이번 달 출근일</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">18일</div>
-                <p className="text-xs text-muted-foreground">총 22일 중</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">평균 근무시간</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">8.2시간</div>
-                <p className="text-xs text-muted-foreground">일일 평균</p>
-              </CardContent>
-            </Card>
+            <DashboardCard
+              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+              title="출근 상태"
+              content={attendanceStatusBadge}
+              description={`현재시간: ${currentTime}`}
+              contentSpacer
+            />
+            <DashboardCard
+              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              title="이번 주 근무시간"
+              content={'32시간'}
+              description={'목표: 40시간'}
+              contentSpacer
+            />
+            <DashboardCard
+              icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+              title="이번 달 출근일"
+              content={'18일'}
+              description={'총 22일 중'}
+              contentSpacer
+            />
+            <DashboardCard
+              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              title="평균 근무시간"
+              content={'8.2시간'}
+              description="일일 평균"
+              contentSpacer
+            />
           </div>
 
-          {/* 출퇴근 기록 카드 */}
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>출퇴근 기록</CardTitle>
+                <CardTitle>오늘의 출퇴근 기록</CardTitle>
                 <CardDescription>오늘의 출퇴근을 기록하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex space-x-4">
                   <Button
                     className="flex-1"
-                    disabled={isCheckedIn}
-                    variant={isCheckedIn ? 'secondary' : 'default'}
+                    disabled={todayAttendance.isCheckedIn}
+                    variant={todayAttendance.isCheckedIn ? 'secondary' : 'default'}
+                    onClick={() => checkIn()}
                   >
                     <Clock className="mr-2 h-4 w-4" />
                     출근
                   </Button>
-                  <Button className="flex-1" variant="outline" disabled={!isCheckedIn}>
+                  <Button
+                    className="flex-1"
+                    variant={
+                      todayAttendance.isCheckedIn && todayAttendance.isCheckedOut
+                        ? 'secondary'
+                        : 'default'
+                    }
+                    disabled={!todayAttendance.isCheckedIn || todayAttendance.isCheckedOut}
+                    onClick={() => checkOut()}
+                  >
                     <Clock className="mr-2 h-4 w-4" />
                     퇴근
                   </Button>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {isCheckedIn ? <p>출근 시간: 09:00 AM</p> : <p>아직 출근하지 않았습니다</p>}
+                  {todayAttendance.isCheckedIn ? (
+                    <p>출근시간: {toDateTimeString(todayAttendance.checkInDate)}</p>
+                  ) : (
+                    <p>출근 전 입니다.</p>
+                  )}
+                  {todayAttendance.isCheckedOut && (
+                    <p>퇴근시간: {toDateTimeString(todayAttendance.checkOutDate)}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
