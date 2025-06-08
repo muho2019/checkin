@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceRecord } from '@attendance/entities/attendance.entity';
-import { Repository } from 'typeorm';
+import { Between, IsNull, Not, Repository } from 'typeorm';
 import { DashboardSummaryResponseDto } from '@modules/dashboard/dto/dashboard-response.dto';
+import {
+  addDays,
+  differenceInHours,
+  parseISO,
+  startOfToday,
+  startOfWeek,
+} from 'date-fns';
 
 @Injectable()
 export class DashboardService {
@@ -12,7 +19,7 @@ export class DashboardService {
   ) {}
 
   async getSummary(userId: string): Promise<DashboardSummaryResponseDto> {
-    const today = new Date();
+    const today = startOfToday();
 
     // 1. 오늘 출근/퇴근 여부 확인
     const todayRecord = await this.attendanceRepo.findOne({
@@ -36,11 +43,27 @@ export class DashboardService {
       checkOutDate = todayRecord.checkOut;
     }
 
+    // 2. 이번 주 근무 시간
+    const monday = startOfWeek(today, { weekStartsOn: 1 }); // 월요일
+    const sunday = addDays(monday, 6); // 일요일
+
+    const recordsThisWeek = await this.attendanceRepo.find({
+      where: {
+        user: { id: userId },
+        date: Between(monday, sunday),
+        checkOut: Not(IsNull()), // 퇴근 기록이 있는 경우만
+      },
+    });
+    const workingHoursThisWeek = recordsThisWeek
+      .map((r) => differenceInHours(r.checkOut, r.checkIn))
+      .reduce((acc, cur) => acc + cur, 0);
+
     return {
       isCheckedIn,
       isCheckedOut,
       checkInDate,
       checkOutDate,
+      workingHoursThisWeek,
     };
   }
 }

@@ -3,4 +3,5 @@ export class DashboardSummaryResponseDto {
   isCheckedOut: boolean;
   checkInDate?: Date;
   checkOutDate?: Date;
+  workingHoursThisWeek: number;
 }

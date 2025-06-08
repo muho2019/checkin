@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
-import { TodayAttendanceState } from '@/types/today-attendance';
+import { DashboardSummaryResponseDto, TodayAttendanceState } from '@/types/dashboard-response';
 
 export function toDateTimeString(date?: Date | string): string {
   if (!date) return '-';
@@ -42,13 +42,14 @@ function toTimeString(date?: Date | string, second: boolean = true) {
 }
 
 export default function Dashboard() {
-  const [currentTime, setCurrentTime] = useState(toTimeString(new Date()));
+  const [currentTime, setCurrentTime] = useState<string>(toTimeString(new Date()));
   const [todayAttendance, setTodayAttendance] = useState<TodayAttendanceState>({
     isCheckedIn: false,
     isCheckedOut: false,
     checkInDate: undefined,
     checkOutDate: undefined,
   });
+  const [workingHoursThisWeek, setWorkingHoursThisWeek] = useState<number>(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,8 +78,8 @@ export default function Dashboard() {
     async function fetchDashboardData() {
       try {
         const res = await api.get('/dashboard/summary');
-        const { isCheckedIn, isCheckedOut, checkInDate, checkOutDate } =
-          res.data as TodayAttendanceState;
+        const { isCheckedIn, isCheckedOut, checkInDate, checkOutDate, workingHoursThisWeek } =
+          res.data as DashboardSummaryResponseDto;
 
         setTodayAttendance(() => ({
           isCheckedIn,
@@ -86,6 +87,7 @@ export default function Dashboard() {
           checkInDate,
           checkOutDate,
         }));
+        setWorkingHoursThisWeek(() => workingHoursThisWeek);
       } catch (error) {
         handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
       }
@@ -144,8 +146,8 @@ export default function Dashboard() {
             <DashboardCard
               icon={<Clock className="h-4 w-4 text-muted-foreground" />}
               title="이번 주 근무시간"
-              content={'32시간'}
-              description={'목표: 40시간'}
+              content={`${workingHoursThisWeek}시간`}
+              description="목표: 40시간"
               contentSpacer
             />
             <DashboardCard
