@@ -50,6 +50,8 @@ export default function Dashboard() {
     checkOutDate: undefined,
   });
   const [workingHoursThisWeek, setWorkingHoursThisWeek] = useState<number>(0);
+  const [workingDaysThisMonth, setWorkingDaysThisMonth] = useState<number>(0);
+  const [totalWorkingDaysThisMonth, setTotalWorkingDaysThisMonth] = useState<number>(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -78,8 +80,15 @@ export default function Dashboard() {
     async function fetchDashboardData() {
       try {
         const res = await api.get('/dashboard/summary');
-        const { isCheckedIn, isCheckedOut, checkInDate, checkOutDate, workingHoursThisWeek } =
-          res.data as DashboardSummaryResponseDto;
+        const {
+          isCheckedIn,
+          isCheckedOut,
+          checkInDate,
+          checkOutDate,
+          workingHoursThisWeek,
+          workingDaysThisMonth,
+          totalWorkingDaysThisMonth,
+        } = res.data as DashboardSummaryResponseDto;
 
         setTodayAttendance(() => ({
           isCheckedIn,
@@ -88,6 +97,8 @@ export default function Dashboard() {
           checkOutDate,
         }));
         setWorkingHoursThisWeek(() => workingHoursThisWeek);
+        setWorkingDaysThisMonth(() => workingDaysThisMonth);
+        setTotalWorkingDaysThisMonth(() => totalWorkingDaysThisMonth);
       } catch (error) {
         handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
       }
@@ -153,8 +164,8 @@ export default function Dashboard() {
             <DashboardCard
               icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
               title="이번 달 출근일"
-              content={'18일'}
-              description={'총 22일 중'}
+              content={`${workingDaysThisMonth}일`}
+              description={`총 ${totalWorkingDaysThisMonth}일 중`}
               contentSpacer
             />
             <DashboardCard

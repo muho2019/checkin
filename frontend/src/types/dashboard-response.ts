@@ -4,6 +4,8 @@ export interface DashboardSummaryResponseDto {
   checkInDate?: string;
   checkOutDate?: string;
   workingHoursThisWeek: number;
+  workingDaysThisMonth: number;
+  totalWorkingDaysThisMonth: number;
 }
 
 export interface TodayAttendanceState {

@@ -6,7 +6,9 @@ import { DashboardSummaryResponseDto } from '@modules/dashboard/dto/dashboard-re
 import {
   addDays,
   differenceInHours,
+  endOfMonth,
   parseISO,
+  startOfMonth,
   startOfToday,
   startOfWeek,
 } from 'date-fns';
@@ -58,12 +60,30 @@ export class DashboardService {
       .map((r) => differenceInHours(r.checkOut, r.checkIn))
       .reduce((acc, cur) => acc + cur, 0);
 
+    // 3. 이번 달 근무일
+    const firstDayOfMonth = startOfMonth(today);
+    const lastDayOfMonth = endOfMonth(today);
+
+    const recordsThisMonth = await this.attendanceRepo.find({
+      where: {
+        user: { id: userId },
+        date: Between(firstDayOfMonth, lastDayOfMonth),
+        checkOut: Not(IsNull()), // 퇴근 기록이 있는 경우만
+      },
+    });
+    const workingDaysThisMonth = recordsThisMonth.length;
+
+    //TODO: 이번 달 전체 근무일 수 계산
+    const totalWorkingDaysThisMonth = 20;
+
     return {
       isCheckedIn,
       isCheckedOut,
       checkInDate,
       checkOutDate,
       workingHoursThisWeek,
+      workingDaysThisMonth,
+      totalWorkingDaysThisMonth,
     };
   }
 }

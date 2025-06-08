@@ -4,4 +4,6 @@ export class DashboardSummaryResponseDto {
   checkInDate?: Date;
   checkOutDate?: Date;
   workingHoursThisWeek: number;
+  workingDaysThisMonth: number;
+  totalWorkingDaysThisMonth: number;
 }
