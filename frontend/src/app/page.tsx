@@ -8,7 +8,7 @@ import { Clock, Calendar, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { api, handleApiError } from '@/lib/api';
 import { toast } from 'sonner';
-import { parseISO } from 'date-fns';
+import { endOfMonth, parseISO, startOfMonth } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import { DashboardSummaryResponseDto, TodayAttendanceState } from '@/types/dashboard-response';
@@ -25,6 +25,18 @@ export function toDateTimeString(date?: Date | string): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+  });
+}
+
+export function toDateString(date?: Date | string): string {
+  if (!date) return '-';
+
+  const parsed = typeof date === 'string' ? parseISO(date) : date;
+
+  return parsed.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   });
 }
 
@@ -52,6 +64,7 @@ export default function Dashboard() {
   const [workingHoursThisWeek, setWorkingHoursThisWeek] = useState<number>(0);
   const [workingDaysThisMonth, setWorkingDaysThisMonth] = useState<number>(0);
   const [totalWorkingDaysThisMonth, setTotalWorkingDaysThisMonth] = useState<number>(0);
+  const [averageWorkingHoursThisMonth, setAverageWorkingHoursThisMonth] = useState<number>(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -88,6 +101,7 @@ export default function Dashboard() {
           workingHoursThisWeek,
           workingDaysThisMonth,
           totalWorkingDaysThisMonth,
+          averageWorkingHoursThisMonth,
         } = res.data as DashboardSummaryResponseDto;
 
         setTodayAttendance(() => ({
@@ -99,12 +113,17 @@ export default function Dashboard() {
         setWorkingHoursThisWeek(() => workingHoursThisWeek);
         setWorkingDaysThisMonth(() => workingDaysThisMonth);
         setTotalWorkingDaysThisMonth(() => totalWorkingDaysThisMonth);
+        setAverageWorkingHoursThisMonth(() => averageWorkingHoursThisMonth);
       } catch (error) {
         handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
       }
     }
     fetchDashboardData();
   }, []);
+
+  const today = new Date();
+  const firstDayOfMonth = startOfMonth(today);
+  const lastDayOfMonth = endOfMonth(today);
 
   const checkIn = async () => {
     try {
@@ -171,8 +190,8 @@ export default function Dashboard() {
             <DashboardCard
               icon={<Clock className="h-4 w-4 text-muted-foreground" />}
               title="평균 근무시간"
-              content={'8.2시간'}
-              description="일일 평균"
+              content={`${averageWorkingHoursThisMonth.toFixed(1)}시간`}
+              description={`일일 평균 (${toDateString(firstDayOfMonth)} ~ ${toDateString(lastDayOfMonth)})`}
               contentSpacer
             />
           </div>

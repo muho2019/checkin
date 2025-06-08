@@ -6,6 +6,7 @@ export interface DashboardSummaryResponseDto {
   workingHoursThisWeek: number;
   workingDaysThisMonth: number;
   totalWorkingDaysThisMonth: number;
+  averageWorkingHoursThisMonth: number;
 }
 
 export interface TodayAttendanceState {

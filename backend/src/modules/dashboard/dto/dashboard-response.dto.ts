@@ -6,4 +6,5 @@ export class DashboardSummaryResponseDto {
   workingHoursThisWeek: number;
   workingDaysThisMonth: number;
   totalWorkingDaysThisMonth: number;
+  averageWorkingHoursThisMonth: number;
 }

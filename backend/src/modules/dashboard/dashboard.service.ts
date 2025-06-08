@@ -71,10 +71,16 @@ export class DashboardService {
         checkOut: Not(IsNull()), // 퇴근 기록이 있는 경우만
       },
     });
+    const workingHoursThisMonth = recordsThisWeek
+      .map((r) => differenceInHours(r.checkOut, r.checkIn))
+      .reduce((acc, cur) => acc + cur, 0);
     const workingDaysThisMonth = recordsThisMonth.length;
 
     //TODO: 이번 달 전체 근무일 수 계산
     const totalWorkingDaysThisMonth = 20;
+
+    const averageWorkingHoursThisMonth =
+      workingHoursThisMonth / workingDaysThisMonth;
 
     return {
       isCheckedIn,
@@ -84,6 +90,7 @@ export class DashboardService {
       workingHoursThisWeek,
       workingDaysThisMonth,
       totalWorkingDaysThisMonth,
+      averageWorkingHoursThisMonth,
     };
   }
 }
