@@ -82,6 +82,22 @@ export class DashboardService {
     const averageWorkingHoursThisMonth =
       workingHoursThisMonth / workingDaysThisMonth;
 
+    // 4. 최근 근태 기록 (최근 5일)
+    const recentRecords = await this.attendanceRepo.find({
+      where: {
+        user: { id: userId },
+        checkOut: Not(IsNull()),
+      },
+      order: { date: 'DESC' },
+      take: 5,
+    });
+
+    const recentAttendanceRecords = recentRecords.map((r) => ({
+      date: r.date,
+      checkIn: r.checkIn,
+      checkOut: r.checkOut,
+    }));
+
     return {
       isCheckedIn,
       isCheckedOut,
@@ -91,6 +107,7 @@ export class DashboardService {
       workingDaysThisMonth,
       totalWorkingDaysThisMonth,
       averageWorkingHoursThisMonth,
+      recentAttendanceRecords,
     };
   }
 }

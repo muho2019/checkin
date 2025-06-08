@@ -8,12 +8,16 @@ import { Clock, Calendar, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { api, handleApiError } from '@/lib/api';
 import { toast } from 'sonner';
-import { endOfMonth, parseISO, startOfMonth } from 'date-fns';
+import { differenceInMinutes, endOfMonth, parseISO, startOfMonth } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
-import { DashboardSummaryResponseDto, TodayAttendanceState } from '@/types/dashboard-response';
+import {
+  DashboardRecentAttendanceRecord,
+  DashboardSummaryResponse,
+  TodayAttendanceState,
+} from '@/types/dashboard-response';
 
-export function toDateTimeString(date?: Date | string): string {
+function toDateTimeString(date?: Date | string): string {
   if (!date) return '-';
 
   const parsed = typeof date === 'string' ? parseISO(date) : date;
@@ -28,7 +32,7 @@ export function toDateTimeString(date?: Date | string): string {
   });
 }
 
-export function toDateString(date?: Date | string): string {
+function toDateString(date?: Date | string, dayOfTheWeek: boolean = false): string {
   if (!date) return '-';
 
   const parsed = typeof date === 'string' ? parseISO(date) : date;
@@ -37,6 +41,9 @@ export function toDateString(date?: Date | string): string {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    ...(dayOfTheWeek && {
+      weekday: 'short',
+    }),
   });
 }
 
@@ -53,6 +60,23 @@ function toTimeString(date?: Date | string, second: boolean = true) {
   return parsed.toLocaleTimeString('ko-KR', options);
 }
 
+function calculateWorkDuration(
+  checkIn: Date,
+  checkOut: Date,
+): {
+  totalHours: number;
+  formatted: string;
+} {
+  const totalMinutes = differenceInMinutes(checkOut, checkIn);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return {
+    totalHours: totalMinutes / 60, // 7.5 형태
+    formatted: `${hours}시간 ${minutes}분`,
+  };
+}
+
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState<string>(toTimeString(new Date()));
   const [todayAttendance, setTodayAttendance] = useState<TodayAttendanceState>({
@@ -65,6 +89,9 @@ export default function Dashboard() {
   const [workingDaysThisMonth, setWorkingDaysThisMonth] = useState<number>(0);
   const [totalWorkingDaysThisMonth, setTotalWorkingDaysThisMonth] = useState<number>(0);
   const [averageWorkingHoursThisMonth, setAverageWorkingHoursThisMonth] = useState<number>(0);
+  const [recentAttendanceRecords, setRecentAttendanceRecords] = useState<
+    DashboardRecentAttendanceRecord[]
+  >([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,21 +100,6 @@ export default function Dashboard() {
 
     return () => clearInterval(timer); // 컴포넌트 언마운트 시 타이머 정리
   }, []);
-
-  let attendanceStatusBadge = (
-    <Badge variant="default" className="bg-amber-300">
-      출근 전
-    </Badge>
-  );
-  if (todayAttendance.isCheckedOut) {
-    attendanceStatusBadge = <Badge variant="outline">퇴근</Badge>;
-  } else if (todayAttendance.isCheckedIn) {
-    attendanceStatusBadge = (
-      <Badge variant="default" className="bg-green-500 text-white">
-        출근
-      </Badge>
-    );
-  }
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -102,7 +114,8 @@ export default function Dashboard() {
           workingDaysThisMonth,
           totalWorkingDaysThisMonth,
           averageWorkingHoursThisMonth,
-        } = res.data as DashboardSummaryResponseDto;
+          recentAttendanceRecords,
+        } = res.data as DashboardSummaryResponse;
 
         setTodayAttendance(() => ({
           isCheckedIn,
@@ -114,16 +127,13 @@ export default function Dashboard() {
         setWorkingDaysThisMonth(() => workingDaysThisMonth);
         setTotalWorkingDaysThisMonth(() => totalWorkingDaysThisMonth);
         setAverageWorkingHoursThisMonth(() => averageWorkingHoursThisMonth);
+        setRecentAttendanceRecords(() => recentAttendanceRecords);
       } catch (error) {
         handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
       }
     }
     fetchDashboardData();
   }, []);
-
-  const today = new Date();
-  const firstDayOfMonth = startOfMonth(today);
-  const lastDayOfMonth = endOfMonth(today);
 
   const checkIn = async () => {
     try {
@@ -155,6 +165,44 @@ export default function Dashboard() {
       handleApiError(error, '퇴근 기록 저장에 실패했습니다.');
     }
   };
+
+  let attendanceStatusBadge = (
+    <Badge variant="default" className="bg-amber-300">
+      출근 전
+    </Badge>
+  );
+  if (todayAttendance.isCheckedOut) {
+    attendanceStatusBadge = <Badge variant="outline">퇴근</Badge>;
+  } else if (todayAttendance.isCheckedIn) {
+    attendanceStatusBadge = (
+      <Badge variant="default" className="bg-green-500 text-white">
+        출근
+      </Badge>
+    );
+  }
+
+  const recentAttendanceRecordsDisplay = recentAttendanceRecords.map(record => {
+    const recordDate = toDateString(record.date, true);
+    const workingHours = calculateWorkDuration(record.checkIn, record.checkOut);
+
+    return (
+      <div key={recordDate} className="flex items-center justify-between text-sm">
+        <span className="font-medium">{recordDate}</span>
+        <div className="flex space-x-2 text-muted-foreground">
+          <span>{toDateString(record.checkIn)}</span>
+          <span>-</span>
+          <span>{toDateString(record.checkOut)}</span>
+          <Badge variant="outline" className="ml-2">
+            {workingHours.formatted}
+          </Badge>
+        </div>
+      </div>
+    );
+  });
+
+  const today = new Date();
+  const firstDayOfMonth = startOfMonth(today);
+  const lastDayOfMonth = endOfMonth(today);
 
   return (
     <ProtectedRoute>
@@ -246,32 +294,7 @@ export default function Dashboard() {
                 <CardDescription>최근 5일간의 근태 기록</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {[
-                    { date: '2024-01-15', checkIn: '09:00', checkOut: '18:00', hours: '8시간' },
-                    {
-                      date: '2024-01-14',
-                      checkIn: '09:15',
-                      checkOut: '18:30',
-                      hours: '8시간 15분',
-                    },
-                    { date: '2024-01-13', checkIn: '08:45', checkOut: '17:45', hours: '8시간' },
-                    { date: '2024-01-12', checkIn: '09:00', checkOut: '18:00', hours: '8시간' },
-                    { date: '2024-01-11', checkIn: '09:30', checkOut: '18:30', hours: '8시간' },
-                  ].map((record, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{record.date}</span>
-                      <div className="flex space-x-2 text-muted-foreground">
-                        <span>{record.checkIn}</span>
-                        <span>-</span>
-                        <span>{record.checkOut}</span>
-                        <Badge variant="outline" className="ml-2">
-                          {record.hours}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <div className="space-y-3">{recentAttendanceRecordsDisplay}</div>
               </CardContent>
             </Card>
           </div>

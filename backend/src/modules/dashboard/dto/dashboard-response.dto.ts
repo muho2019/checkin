@@ -7,4 +7,11 @@ export class DashboardSummaryResponseDto {
   workingDaysThisMonth: number;
   totalWorkingDaysThisMonth: number;
   averageWorkingHoursThisMonth: number;
+  recentAttendanceRecords: RecentAttendanceRecordDto[];
+}
+
+export class RecentAttendanceRecordDto {
+  date: Date;
+  checkIn: Date;
+  checkOut: Date;
 }
