@@ -71,7 +71,7 @@ export class DashboardService {
         checkOut: Not(IsNull()), // 퇴근 기록이 있는 경우만
       },
     });
-    const workingHoursThisMonth = recordsThisWeek
+    const workingHoursThisMonth = recordsThisMonth
       .map((r) => differenceInHours(r.checkOut, r.checkIn))
       .reduce((acc, cur) => acc + cur, 0);
     const workingDaysThisMonth = recordsThisMonth.length;

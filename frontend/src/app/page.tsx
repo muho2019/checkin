@@ -16,6 +16,7 @@ import {
   DashboardSummaryResponse,
   TodayAttendanceState,
 } from '@/types/dashboard-response';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function toDateTimeString(date?: Date | string): string {
   if (!date) return '-';
@@ -78,6 +79,7 @@ function calculateWorkDuration(
 }
 
 export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<string>(toTimeString(new Date()));
   const [todayAttendance, setTodayAttendance] = useState<TodayAttendanceState>({
     isCheckedIn: false,
@@ -117,19 +119,21 @@ export default function Dashboard() {
           recentAttendanceRecords,
         } = res.data as DashboardSummaryResponse;
 
-        setTodayAttendance(() => ({
+        setTodayAttendance({
           isCheckedIn,
           isCheckedOut,
           checkInDate,
           checkOutDate,
-        }));
-        setWorkingHoursThisWeek(() => workingHoursThisWeek);
-        setWorkingDaysThisMonth(() => workingDaysThisMonth);
-        setTotalWorkingDaysThisMonth(() => totalWorkingDaysThisMonth);
-        setAverageWorkingHoursThisMonth(() => averageWorkingHoursThisMonth);
-        setRecentAttendanceRecords(() => recentAttendanceRecords);
+        });
+        setWorkingHoursThisWeek(workingHoursThisWeek);
+        setWorkingDaysThisMonth(workingDaysThisMonth);
+        setTotalWorkingDaysThisMonth(totalWorkingDaysThisMonth);
+        setAverageWorkingHoursThisMonth(averageWorkingHoursThisMonth);
+        setRecentAttendanceRecords(recentAttendanceRecords);
       } catch (error) {
         handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchDashboardData();
@@ -219,84 +223,92 @@ export default function Dashboard() {
               title="출근 상태"
               content={attendanceStatusBadge}
               description={`현재시간: ${currentTime}`}
-              contentSpacer
+              isLoading={isLoading}
             />
             <DashboardCard
               icon={<Clock className="h-4 w-4 text-muted-foreground" />}
               title="이번 주 근무시간"
               content={`${workingHoursThisWeek}시간`}
               description="목표: 40시간"
-              contentSpacer
+              isLoading={isLoading}
             />
             <DashboardCard
               icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
               title="이번 달 출근일"
               content={`${workingDaysThisMonth}일`}
               description={`총 ${totalWorkingDaysThisMonth}일 중`}
-              contentSpacer
+              isLoading={isLoading}
             />
             <DashboardCard
               icon={<Clock className="h-4 w-4 text-muted-foreground" />}
               title="평균 근무시간"
               content={`${averageWorkingHoursThisMonth.toFixed(1)}시간`}
               description={`일일 평균 (${toDateString(firstDayOfMonth)} ~ ${toDateString(lastDayOfMonth)})`}
-              contentSpacer
+              isLoading={isLoading}
             />
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>오늘의 출퇴근 기록</CardTitle>
-                <CardDescription>오늘의 출퇴근을 기록하세요</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex space-x-4">
-                  <Button
-                    className="flex-1"
-                    disabled={todayAttendance.isCheckedIn}
-                    variant={todayAttendance.isCheckedIn ? 'secondary' : 'default'}
-                    onClick={() => checkIn()}
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    출근
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    variant={
-                      todayAttendance.isCheckedIn && todayAttendance.isCheckedOut
-                        ? 'secondary'
-                        : 'default'
-                    }
-                    disabled={!todayAttendance.isCheckedIn || todayAttendance.isCheckedOut}
-                    onClick={() => checkOut()}
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    퇴근
-                  </Button>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {todayAttendance.isCheckedIn ? (
-                    <p>출근시간: {toDateTimeString(todayAttendance.checkInDate)}</p>
-                  ) : (
-                    <p>출근 전 입니다.</p>
-                  )}
-                  {todayAttendance.isCheckedOut && (
-                    <p>퇴근시간: {toDateTimeString(todayAttendance.checkOutDate)}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>최근 근태 기록</CardTitle>
-                <CardDescription>최근 5일간의 근태 기록</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">{recentAttendanceRecordsDisplay}</div>
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-64" />
+                <Skeleton className="h-64" />
+              </>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>오늘의 출퇴근 기록</CardTitle>
+                    <CardDescription>오늘의 출퇴근을 기록하세요</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex space-x-4">
+                      <Button
+                        className="flex-1"
+                        disabled={todayAttendance.isCheckedIn}
+                        variant={todayAttendance.isCheckedIn ? 'secondary' : 'default'}
+                        onClick={() => checkIn()}
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        출근
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        variant={
+                          todayAttendance.isCheckedIn && todayAttendance.isCheckedOut
+                            ? 'secondary'
+                            : 'default'
+                        }
+                        disabled={!todayAttendance.isCheckedIn || todayAttendance.isCheckedOut}
+                        onClick={() => checkOut()}
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        퇴근
+                      </Button>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {todayAttendance.isCheckedIn ? (
+                        <p>출근시간: {toDateTimeString(todayAttendance.checkInDate)}</p>
+                      ) : (
+                        <p>출근 전 입니다.</p>
+                      )}
+                      {todayAttendance.isCheckedOut && (
+                        <p>퇴근시간: {toDateTimeString(todayAttendance.checkOutDate)}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>최근 근태 기록</CardTitle>
+                    <CardDescription>최근 5일간의 근태 기록</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">{recentAttendanceRecordsDisplay}</div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
       </DashboardLayout>
