@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AuthLayout } from '@/components/auth/auth-layout';
-import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CompanySearch } from '@/components/auth/company-search';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -68,6 +69,13 @@ export default function RegisterPage() {
     });
   };
 
+  const handleCompanyChange = (value: string) => {
+    setFormData({
+      ...formData,
+      company: value,
+    });
+  };
+
   return (
     <AuthLayout>
       <Card>
@@ -113,19 +121,14 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               <Label htmlFor="company">회사명</Label>
-              <div className="relative">
-                <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="company"
-                  name="company"
-                  type="text"
-                  placeholder="회사명을 입력하세요"
-                  value={formData.company}
-                  onChange={handleInputChange}
-                  className="pl-10"
-                  required
-                />
-              </div>
+              <CompanySearch
+                value={formData.company}
+                onChange={handleCompanyChange}
+                placeholder="회사명을 검색하세요"
+              />
+              <p className="text-xs text-muted-foreground">
+                회사명을 입력하면 검색 결과가 나타납니다. 목록에서 선택하거나 직접 입력하세요.
+              </p>
             </div>
 
             <div className="space-y-2">

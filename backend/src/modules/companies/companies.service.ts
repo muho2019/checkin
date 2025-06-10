@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from './entities/company.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { SearchCompanyResponseDto } from '@companies/dto/search-company-response.dto';
 
 @Injectable()
 export class CompaniesService {
@@ -15,8 +16,16 @@ export class CompaniesService {
     private readonly companyRepo: Repository<Company>,
   ) {}
 
-  async findAll(): Promise<Company[]> {
-    return this.companyRepo.find();
+  async findAll(name: string): Promise<SearchCompanyResponseDto[]> {
+    const companies = await this.companyRepo.find({
+      ...(name && { where: { name: ILike(`%${name}%`), isActive: true } }),
+    });
+
+    return companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      industry: c.industry,
+    }));
   }
 
   async findOne(name: string): Promise<Company | null> {

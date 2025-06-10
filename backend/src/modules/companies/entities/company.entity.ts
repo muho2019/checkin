@@ -9,6 +9,9 @@ export class Company {
   @Column({ unique: true })
   name: string;
 
+  @Column({ nullable: true })
+  industry: string;
+
   @Column({ default: true })
   isActive: boolean;
 
