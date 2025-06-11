@@ -8,7 +8,7 @@ import { Clock, Calendar, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { api, handleApiError } from '@/lib/api';
 import { toast } from 'sonner';
-import { differenceInMinutes, endOfMonth, parseISO, startOfMonth } from 'date-fns';
+import { differenceInMinutes, endOfMonth, startOfMonth } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import {
@@ -17,49 +17,7 @@ import {
   TodayAttendanceState,
 } from '@/types/dashboard-response';
 import { Skeleton } from '@/components/ui/skeleton';
-
-function toDateTimeString(date?: Date | string): string {
-  if (!date) return '-';
-
-  const parsed = typeof date === 'string' ? parseISO(date) : date;
-
-  return parsed.toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
-function toDateString(date?: Date | string, dayOfTheWeek: boolean = false): string {
-  if (!date) return '-';
-
-  const parsed = typeof date === 'string' ? parseISO(date) : date;
-
-  return parsed.toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    ...(dayOfTheWeek && {
-      weekday: 'short',
-    }),
-  });
-}
-
-function toTimeString(date?: Date | string, second: boolean = true) {
-  if (!date) return '-';
-
-  const parsed = typeof date === 'string' ? parseISO(date) : date;
-
-  const options: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    ...(second && { second: '2-digit' }),
-  };
-  return parsed.toLocaleTimeString('ko-KR', options);
-}
+import { toDateString, toDateTimeString, toTimeString } from '@/lib/date-utils';
 
 function calculateWorkDuration(
   checkIn: Date,
