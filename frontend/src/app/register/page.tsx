@@ -30,7 +30,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    company: '',
+    companyName: '',
     role: '',
   });
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        company: formData.company,
+        companyName: formData.companyName,
         role: formData.role as 'EMPLOYEE' | 'MANAGER',
       });
     } catch (error) {
@@ -72,7 +72,7 @@ export default function RegisterPage() {
   const handleCompanyChange = (value: string) => {
     setFormData({
       ...formData,
-      company: value,
+      companyName: value,
     });
   };
 
@@ -122,7 +122,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="company">회사명</Label>
               <CompanySearch
-                value={formData.company}
+                value={formData.companyName}
                 onChange={handleCompanyChange}
                 placeholder="회사명을 검색하세요"
               />

@@ -4,7 +4,6 @@ import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, handleApiError } from '@/lib/api';
-import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -28,7 +27,7 @@ interface RegisterData {
   name: string;
   email: string;
   password: string;
-  company: string;
+  companyName: string;
   role: 'EMPLOYEE' | 'MANAGER';
 }
 
@@ -105,11 +104,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.post('/auth/login', { email, password });
 
-      const { accessToken: newToken, user: userData } = response.data;
+      const { accessToken, user } = response.data;
 
-      localStorage.setItem('auth-token', newToken);
-      setToken(newToken);
-      setUser(userData);
+      localStorage.setItem('auth-token', accessToken);
+      setToken(accessToken);
+      setUser(user);
 
       router.push('/');
     } catch (error) {
@@ -123,26 +122,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
+      await api.post('/auth/signup', userData);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '회원가입에 실패했습니다.');
-      }
-
-      const { token: newToken, user: newUser } = await response.json();
-
-      localStorage.setItem('auth-token', newToken);
-      setToken(newToken);
-      setUser(newUser);
-
-      router.push('/');
+      await login(userData.email, userData.password);
     } catch (error) {
-      throw error;
+      handleApiError(error, '회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
