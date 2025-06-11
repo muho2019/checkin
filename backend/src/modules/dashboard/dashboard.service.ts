@@ -74,13 +74,13 @@ export class DashboardService {
     const workingHoursThisMonth = recordsThisMonth
       .map((r) => differenceInHours(r.checkOut, r.checkIn))
       .reduce((acc, cur) => acc + cur, 0);
-    const workingDaysThisMonth = recordsThisMonth.length;
 
+    const workingDaysThisMonth = recordsThisMonth.length;
     //TODO: 이번 달 전체 근무일 수 계산
     const totalWorkingDaysThisMonth = 20;
 
     const averageWorkingHoursThisMonth =
-      workingHoursThisMonth / workingDaysThisMonth;
+      workingHoursThisMonth / workingDaysThisMonth || 0;
 
     // 4. 최근 근태 기록 (최근 5일)
     const recentRecords = await this.attendanceRepo.find({
