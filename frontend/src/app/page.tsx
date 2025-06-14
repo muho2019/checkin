@@ -61,39 +61,40 @@ export default function Dashboard() {
     return () => clearInterval(timer); // 컴포넌트 언마운트 시 타이머 정리
   }, []);
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        const res = await api.get('/dashboard/summary');
-        const {
-          isCheckedIn,
-          isCheckedOut,
-          checkInDate,
-          checkOutDate,
-          workingHoursThisWeek,
-          workingDaysThisMonth,
-          totalWorkingDaysThisMonth,
-          averageWorkingHoursThisMonth,
-          recentAttendanceRecords,
-        } = res.data as DashboardSummaryResponse;
+  const fetchDashboardData = async () => {
+    try {
+      const res = await api.get('/dashboard/summary');
+      const {
+        isCheckedIn,
+        isCheckedOut,
+        checkInDate,
+        checkOutDate,
+        workingHoursThisWeek,
+        workingDaysThisMonth,
+        totalWorkingDaysThisMonth,
+        averageWorkingHoursThisMonth,
+        recentAttendanceRecords,
+      } = res.data as DashboardSummaryResponse;
 
-        setTodayAttendance({
-          isCheckedIn,
-          isCheckedOut,
-          checkInDate,
-          checkOutDate,
-        });
-        setWorkingHoursThisWeek(workingHoursThisWeek);
-        setWorkingDaysThisMonth(workingDaysThisMonth);
-        setTotalWorkingDaysThisMonth(totalWorkingDaysThisMonth);
-        setAverageWorkingHoursThisMonth(averageWorkingHoursThisMonth);
-        setRecentAttendanceRecords(recentAttendanceRecords);
-      } catch (error) {
-        handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
+      setTodayAttendance({
+        isCheckedIn,
+        isCheckedOut,
+        checkInDate,
+        checkOutDate,
+      });
+      setWorkingHoursThisWeek(workingHoursThisWeek);
+      setWorkingDaysThisMonth(workingDaysThisMonth);
+      setTotalWorkingDaysThisMonth(totalWorkingDaysThisMonth);
+      setAverageWorkingHoursThisMonth(averageWorkingHoursThisMonth);
+      setRecentAttendanceRecords(recentAttendanceRecords);
+    } catch (error) {
+      handleApiError(error, '대시보드 정보를 불러오는 데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -123,6 +124,7 @@ export default function Dashboard() {
         isCheckedOut: true,
         checkOutDate: res.data.checkOut,
       }));
+      await fetchDashboardData(); // 퇴근 후 대시보드 데이터 새로고침
     } catch (error) {
       handleApiError(error, '퇴근 기록 저장에 실패했습니다.');
     }
