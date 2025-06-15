@@ -40,4 +40,7 @@ export class User {
 
   @OneToMany(() => AttendanceRecord, (record) => record.user)
   records: AttendanceRecord[];
+
+  @Column()
+  refreshToken: string;
 }

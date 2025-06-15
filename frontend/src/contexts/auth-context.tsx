@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(storedToken);
         setUser(userData);
         // 토큰 갱신 시도
-        refreshTokenIfNeeded(storedToken);
+        refreshTokenIfNeeded();
       } else {
         localStorage.removeItem('auth-token');
       }
@@ -74,27 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // 토큰 자동 갱신
-  const refreshTokenIfNeeded = async (currentToken: string) => {
+  const refreshTokenIfNeeded = async () => {
     try {
-      const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentToken}`,
-        },
-      });
+      const response = await api.post('/auth/refresh');
 
-      if (response.ok) {
-        const { token: newToken } = await response.json();
-        if (newToken !== currentToken) {
-          localStorage.setItem('auth-token', newToken);
-          setToken(newToken);
-          const userData = getUserFromToken(newToken);
-          if (userData) setUser(userData);
-        }
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
+      const { accessToken, user } = response.data;
+
+      localStorage.setItem('auth-token', accessToken);
+      setToken(accessToken);
+      setUser(user);
+    } catch {
+      logout();
     }
   };
 
@@ -140,15 +130,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  // 토큰 자동 갱신 (30분마다)
+  // 토큰 자동 갱신 (15분마다)
   useEffect(() => {
     if (token) {
       const interval = setInterval(
         () => {
-          refreshTokenIfNeeded(token);
+          refreshTokenIfNeeded();
         },
-        30 * 60 * 1000,
-      ); // 30분
+        15 * 60 * 1000,
+      ); // 15분
 
       return () => clearInterval(interval);
     }

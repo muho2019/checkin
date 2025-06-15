@@ -13,6 +13,7 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CompaniesService } from '@companies/companies.service';
 import { CreateCompanyDto } from '@companies/dto/create-company.dto';
+import { AuthUser } from '@interfaces/auth-user.interface';
 
 @Injectable()
 export class AuthService {
@@ -69,16 +70,24 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
-    const payload = {
+    const payload: AuthUser = {
       sub: user.id,
       email: user.email,
+      name: user.name,
       role: user.role,
       companyId: user.company?.id,
       companyName: user.company?.name,
     };
 
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    user.refreshToken = refreshToken;
+
+    await this.userRepo.save(user);
+
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -90,8 +99,32 @@ export class AuthService {
     };
   }
 
-  async hashPassword(plain: string): Promise<string> {
-    const salt = await bcrypt.genSalt();
-    return await bcrypt.hash(plain, salt);
+  async verifyRefreshToken(token: string): Promise<AuthUser> {
+    const payload: AuthUser = this.jwtService.verify<AuthUser>(token);
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (user == null || user.refreshToken !== token)
+      throw new UnauthorizedException();
+
+    return payload;
+  }
+
+  refreshAccessToken(payload: AuthUser): AuthResponseDto {
+    const { exp: _exp, iat: _iat, ...cleanedPayload } = payload;
+    const accessToken = this.jwtService.sign(cleanedPayload, {
+      expiresIn: '15m',
+    });
+
+    return {
+      accessToken,
+      user: {
+        id: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+        companyId: payload.companyId,
+        companyName: payload.companyName,
+      },
+    };
   }
 }
