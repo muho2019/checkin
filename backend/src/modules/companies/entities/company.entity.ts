@@ -9,6 +9,9 @@ export class Company {
   @Column({ unique: true })
   name: string;
 
+  @Column()
+  representative: string;
+
   @Column({ nullable: true })
   industry: string;
 
